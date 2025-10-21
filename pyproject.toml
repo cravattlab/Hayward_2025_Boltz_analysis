@@ -1,0 +1,26 @@
+[project]
+name = "hayward_boltz2"
+version = "0.0.0"
+description = "A data processing and analysis pipeline for the evaluation of Boltz-2 predictions with covalent ligands identified by cysteine-directed APBB."
+authors = [
+    { name = "Ray Berkeley", email = "rberkeley@scripps.edu" },
+    { name = "Zijian Gao", email = "zijian.gao@exeter.ox.ac.uk" },
+    { name = "Bruno Melillo", email = "bmelillo@scripps.edu"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "biopython==1.85",
+    "numpy==1.26.0",
+    "openpyxl==3.1.5",
+    "pandas==2.2.3",
+    "posebusters==0.4.6",
+    "rdkit==2024.9.5",
+    "requests==2.32.2",
+    "scipy==1.15.2"
+]
+
+external-dependencies = [
+    "phenix>=1.21"
+]
