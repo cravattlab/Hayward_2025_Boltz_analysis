@@ -1,6 +1,6 @@
 # Boltz-2 Analysis for Hayward, et al 2025
 
-This repository contains code used for the analysis of Boltz-2 structures generated for the article "Tryptoline Stereoprobe Elaboration Identifies Inhibitors of the GRPEL1-HSPA9 Chaperone Complex".
+This repository contains code used for the analysis of Boltz-2 structures generated for the article "Tryptoline Stereoprobe Elaboration Identifies Inhibitors of the GRPEL1-HSPA9 Chaperone Complex". The [preprint](https://www.biorxiv.org/content/10.1101/2025.10.20.683548v1) is available on bioRxiv.
 
 ## Installation
 
