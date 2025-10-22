@@ -20,7 +20,7 @@ def parse_site_groups(index_file: Path, index_sheet: str, index_header: int = 2)
     site_to_peptides: Dict[Tuple[str, int], Set[str]] = {}
 
     for _, row in ind_df.iterrows():
-        accession = str(row["Uniprot ID"]).strip()
+        accession = str(row["Accession"]).strip().split()[0]
 
         # robust split on ; , or whitespace
         sites_str = str(row["Site"])

@@ -347,7 +347,7 @@ def process_binding_sites(ind_df: pd.DataFrame, predictions_dir: Path, site_cuto
     # Fetch UniProt data
     uniprot_cache = {}
     if not skip_uniprot:
-        accessions = ind_df["Uniprot ID"].unique().tolist()
+        accessions = ind_df["Accession"].str.split().str[0].unique().tolist()
         uniprot_cache = get_uniprot_info_batch(accessions)
 
     # Find all CIF files
@@ -360,7 +360,7 @@ def process_binding_sites(ind_df: pd.DataFrame, predictions_dir: Path, site_cuto
     print(f"Processing {len(ind_df)} ligand-protein pairs from index file...")
 
     for _, row in ind_df.iterrows():
-        accession = row["Uniprot ID"]
+        accession = str(row["Accession"]).strip().split()[0]
         ligand_name = row["Stereoprobe"]
         cys_site = int(row["Site"])
         gene_name = row["Protein"]
