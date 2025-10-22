@@ -43,7 +43,13 @@ The `process_boltz_from_index.py` script expects a directory of cif files that a
 After activating the appropriate virtual environment, an example processing command might be:
 
 ```bash
-(hayward_boltz2) ➜ ~ python -u process_boltz_from_index.py --predictions-dir=./example_data/ --index-file=./Supplementary_Dataset_1.xlsx --index-sheet='liganded sites' --ligand-sheet='compounds' --output=example_output.xlsx --index-header=0 --ligands-header=0 | tee example_output.log
+(hayward_boltz2) ➜ ~ python process_boltz_from_index.py \
+  --predictions-dir=./example_data/ \
+  --index-file=./Supplementary_Dataset_1.xlsx \
+  --index-sheet='liganded sites' \
+  --ligand-sheet='compounds' \
+  --output=example_output.xlsx \
+  | tee example_output.log
 ```
 
 All additional arguments available for adjusting the behavior of this analysis pipeline can be found in the `--help` option:
