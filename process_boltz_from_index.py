@@ -609,7 +609,7 @@ def main():
     parser.add_argument("--index-header", type=int, default=2, help="Header in the index sheet")
     parser.add_argument("--ligands-header", type=int, default=2, help="Header in the ligand sheet")
     parser.add_argument("--save-raw-data", action="store_true",
-                        help="Skip Excel formatting and write full output to an excel file")
+                        help="Skip Excel formatting and write full output to an Excel file")
 
     args = parser.parse_args()
 
