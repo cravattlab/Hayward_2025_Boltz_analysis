@@ -42,7 +42,8 @@ def compare_stereochemistry(predicted: Chem.Mol | None | str, template: Chem.Mol
 
 def get_ligand_structure(cif_path: Path, ligand_name: str = "LIG1") -> str:
     """
-    Extract atoms from Boltz-2 prediction using the LIG1 name.
+    Extract atoms from a Boltz-2 or AF3 prediction using the ligand name. Boltz-2
+    default is LIG1, AF3 encodes the ligand name in the CIF.
 
     Returns: str object representing the ligand in RDKit-compatible xyz format
     """
@@ -60,7 +61,7 @@ def get_ligand_structure(cif_path: Path, ligand_name: str = "LIG1") -> str:
                         x, y, z = map(float, atom.coord.tolist())
                         atoms.append((elem, x, y, z))
 
-    lines = [str(len(atoms)), "LIG1"]
+    lines = [str(len(atoms)), ligand_name]
     for e, x, y, z in atoms:
         lines.append(f"{e} {x:.3f} {y:.3f} {z:.3f}")
 
@@ -95,6 +96,7 @@ def classify_df(
     df_main: pd.DataFrame,
     df_ligand: pd.DataFrame,
     enumerate_stereoisomers: bool = False,
+    alphafold3: bool = False,
 ) -> pd.DataFrame:
     """
     Evaluate predicted ligand stereochemistry and compare it to known stereochemistry.
@@ -125,11 +127,13 @@ def classify_df(
             print(f"Warning: Could not find CIF file: {model_filename}")
             continue
 
+        ligand_name = row["ligand_name"]
+        ligand_resname = ligand_name if alphafold3 else "LIG1"
+
         # Extract ligand structure
-        ligand_xyz = get_ligand_structure(cif_path)
+        ligand_xyz = get_ligand_structure(cif_path, ligand_resname)
 
         # Get SMILES template
-        ligand_name = row["ligand_name"]
         print(f"Evaluating {ligand_name} stereochemistry.")
         try:
             smiles_template = df_l.loc[df_l["Name"] == ligand_name, "Structure (SMILES)"].iloc[0]
@@ -138,7 +142,18 @@ def classify_df(
             continue
 
         # Generate RDKit molecules
-        mol, template = get_ligand_RDKit_mol(ligand_xyz, smiles_template)
+        try:
+            mol, template = get_ligand_RDKit_mol(ligand_xyz, smiles_template)
+        # Failed once for the AF3 structure set
+        except ValueError as e:
+            accession = row.get("accession", "")
+            gene_name = row.get("gene_name", "")
+            protein_label = gene_name or accession or "unknown_protein"
+            print(
+                "Warning: RDKit template matching failed for "
+                f"{protein_label} ({accession}) ligand {ligand_name} in {model_filename}: {e}"
+            )
+            continue
 
         # Get stereochemistry info for mol if it didn't throw an RDKit error
         if not isinstance(mol, str):

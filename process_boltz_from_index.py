@@ -606,6 +606,8 @@ def main():
                         help="Include metal ions in orthosteric sites analysis")
     parser.add_argument("--include-mutations", action="store_true",
                         help="Include mutagenesis sites in orthosteric sites analysis")
+    parser.add_argument("--alphafold3", action="store_true",
+                        help="Use ligand name from CIF (AlphaFold3) instead of the LIG1 placeholder")
     parser.add_argument("--index-header", type=int, default=2, help="Header in the index sheet")
     parser.add_argument("--ligands-header", type=int, default=2, help="Header in the ligand sheet")
     parser.add_argument("--save-raw-data", action="store_true",
@@ -705,7 +707,12 @@ def main():
     # Add stereochemistry evaluation
     if args.ligand_sheet:
         ligand_df = pd.read_excel(index_path, sheet_name=args.ligand_sheet, header=args.ligands_header)
-        main_df = classify_ligand_stereochemistry.classify_df(main_df, ligand_df, enumerate_stereoisomers=False)
+        main_df = classify_ligand_stereochemistry.classify_df(
+            main_df,
+            ligand_df,
+            enumerate_stereoisomers=False,
+            alphafold3=args.alphafold3,
+        )
 
     # Add liganding event categories
     main_df = classify_liganding_events.classify_df(main_df)
