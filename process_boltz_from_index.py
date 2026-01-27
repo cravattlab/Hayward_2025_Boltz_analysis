@@ -615,6 +615,10 @@ def main():
 
     args = parser.parse_args()
 
+    if any([args.skip_orthosteric, args.skip_uniprot, args.skip_validation]) and not args.save_raw_data:
+        warnings.warn("--skip argument set, setting --save-raw-data to prevent Excel index errors after data processing.")
+        args.save_raw_data = True
+
     # make sure phenix is available in the system path
     if not args.skip_validation:
         print("Checking for phenix...")
@@ -623,13 +627,13 @@ def main():
         else:
             print("Phenix found.")
     else:
-        print("Skipping Phenix check (validation disabled).")
+        warnings.warn("Skipping Phenix check (validation disabled).")
 
     print("\nStarting to process data...")
 
     if not args.ligand_sheet:
-        warnings.warn("No ligand sheet provided, skipping stereochemical evaluation."
-                      )
+        warnings.warn("No ligand sheet provided, skipping stereochemical evaluation and Excel formatting.")
+        args.save_raw_data = True
     predictions_dir = Path(args.predictions_dir)
 
     # Parse output path
