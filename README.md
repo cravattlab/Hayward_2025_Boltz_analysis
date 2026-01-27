@@ -16,7 +16,8 @@ We recommend installing Python dependencies for the scripts in this repository u
 With `uv`:
 ```bash
 # Create and activate a virtual environment
-uv venv .venv
+uv python install 3.11
+uv venv -p 3.11 .venv
 source .venv/bin/activate
 
 # Install dependencies using requirements.txt
