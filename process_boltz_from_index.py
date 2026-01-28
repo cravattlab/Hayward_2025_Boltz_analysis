@@ -721,10 +721,22 @@ def main():
     # Add liganding event categories
     main_df = classify_liganding_events.classify_df(main_df)
     if not args.skip_validation:
-        pb_df = validate_structures.validate(main_df, ligand_df)
+        pb_df = validate_structures.validate(main_df, ligand_df, alphafold3=args.alphafold3)
     else:
         print("Skipping structure validation step.")
         pb_df = pd.DataFrame()
+    ##############
+    # Debug
+    if not pb_df.empty:
+        expected_pb_cols = list(format_excel.COLUMN_MAPPINGS["physical validation"].keys())
+        missing_pb_cols = [c for c in expected_pb_cols if c not in pb_df.columns]
+        if missing_pb_cols:
+            print("\nValidation diagnostics:")
+            print(f"- Missing PoseBusters/phenix columns: {missing_pb_cols}")
+            if "pb_error" in pb_df.columns:
+                print("- pb_error summary:")
+                print(pb_df["pb_error"].fillna("None").value_counts().head(10).to_string())
+    #############
     summary_df = calculate_summary_statistics.calculate_bulk_summary_statistics(main_df, args.index_file, args.index_sheet, args.index_header)
 
     dataframes = {
