@@ -606,12 +606,18 @@ def main():
                         help="Include metal ions in orthosteric sites analysis")
     parser.add_argument("--include-mutations", action="store_true",
                         help="Include mutagenesis sites in orthosteric sites analysis")
+    parser.add_argument("--alphafold3", action="store_true",
+                        help="Use ligand name from CIF (AlphaFold3) instead of the LIG1 placeholder")
     parser.add_argument("--index-header", type=int, default=2, help="Header in the index sheet")
     parser.add_argument("--ligands-header", type=int, default=2, help="Header in the ligand sheet")
     parser.add_argument("--save-raw-data", action="store_true",
                         help="Skip Excel formatting and write full output to an Excel file")
 
     args = parser.parse_args()
+
+    if any([args.skip_orthosteric, args.skip_uniprot, args.skip_validation]) and not args.save_raw_data:
+        warnings.warn("--skip argument set, setting --save-raw-data to prevent Excel index errors after data processing.")
+        args.save_raw_data = True
 
     # make sure phenix is available in the system path
     if not args.skip_validation:
@@ -621,13 +627,13 @@ def main():
         else:
             print("Phenix found.")
     else:
-        print("Skipping Phenix check (validation disabled).")
+        warnings.warn("Skipping Phenix check (validation disabled).")
 
     print("\nStarting to process data...")
 
     if not args.ligand_sheet:
-        warnings.warn("No ligand sheet provided, skipping stereochemical evaluation."
-                      )
+        warnings.warn("No ligand sheet provided, skipping stereochemical evaluation and Excel formatting.")
+        args.save_raw_data = True
     predictions_dir = Path(args.predictions_dir)
 
     # Parse output path
@@ -705,15 +711,32 @@ def main():
     # Add stereochemistry evaluation
     if args.ligand_sheet:
         ligand_df = pd.read_excel(index_path, sheet_name=args.ligand_sheet, header=args.ligands_header)
-        main_df = classify_ligand_stereochemistry.classify_df(main_df, ligand_df, enumerate_stereoisomers=False)
+        main_df = classify_ligand_stereochemistry.classify_df(
+            main_df,
+            ligand_df,
+            enumerate_stereoisomers=False,
+            alphafold3=args.alphafold3,
+        )
 
     # Add liganding event categories
     main_df = classify_liganding_events.classify_df(main_df)
     if not args.skip_validation:
-        pb_df = validate_structures.validate(main_df, ligand_df)
+        pb_df = validate_structures.validate(main_df, ligand_df, alphafold3=args.alphafold3)
     else:
         print("Skipping structure validation step.")
         pb_df = pd.DataFrame()
+    ##############
+    # Debug
+    if not pb_df.empty:
+        expected_pb_cols = list(format_excel.COLUMN_MAPPINGS["physical validation"].keys())
+        missing_pb_cols = [c for c in expected_pb_cols if c not in pb_df.columns]
+        if missing_pb_cols:
+            print("\nValidation diagnostics:")
+            print(f"- Missing PoseBusters/phenix columns: {missing_pb_cols}")
+            if "pb_error" in pb_df.columns:
+                print("- pb_error summary:")
+                print(pb_df["pb_error"].fillna("None").value_counts().head(10).to_string())
+    #############
     summary_df = calculate_summary_statistics.calculate_bulk_summary_statistics(main_df, args.index_file, args.index_sheet, args.index_header)
 
     dataframes = {

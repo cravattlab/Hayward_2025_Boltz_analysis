@@ -176,7 +176,11 @@ def phenix_validate_protein(pdb_path: str, timeout: int = 600) -> dict:
 
     return result
 
-def run_validation(df_main: pd.DataFrame, df_ligand: pd.DataFrame) -> pd.DataFrame:
+def run_validation(
+    df_main: pd.DataFrame,
+    df_ligand: pd.DataFrame,
+    alphafold3: bool = False,
+) -> pd.DataFrame:
     """
     Run PoseBusters analysis on protein-ligand complexes from main dataframe.
 
@@ -238,8 +242,11 @@ def run_validation(df_main: pd.DataFrame, df_ligand: pd.DataFrame) -> pd.DataFra
                 results.append(pd.DataFrame([{**result, "pb_error": "invalid or empty template mol", "pb_valid": False}]))
                 continue
 
+            ligand_name = row["ligand_name"]
+            ligand_resname = ligand_name if alphafold3 else "LIG1"
+
             # get ligand mol
-            ligand_mol = get_ligand_mol(cif_path, template_mol)
+            ligand_mol = get_ligand_mol(cif_path, template_mol, ligand_name=ligand_resname)
             if ligand_mol is None or ligand_mol.GetNumAtoms() == 0:
                 results.append(pd.DataFrame([{**result, "pb_error": "error getting ligand mol", "pb_valid": False}]))
                 continue
@@ -249,7 +256,7 @@ def run_validation(df_main: pd.DataFrame, df_ligand: pd.DataFrame) -> pd.DataFra
             print(f"- Ligand MW: {Descriptors.HeavyAtomMolWt(ligand_mol)}")
             print("- Chiral centers:", FindMolChiralCenters(ligand_mol, includeUnassigned=True))
 
-            with get_protein_pdb(cif_path) as protein_pdb_path:
+            with get_protein_pdb(cif_path, ligand_name=ligand_resname) as protein_pdb_path:
                 buster = PoseBusters(config="redock_fast").bust(
                 # buster = PoseBusters(config="redock").bust( # this option is much slower
                     [ligand_mol],
@@ -283,7 +290,8 @@ def run_validation(df_main: pd.DataFrame, df_ligand: pd.DataFrame) -> pd.DataFra
 def validate(
     df_main: pd.DataFrame,
     df_ligand: pd.DataFrame,
-    skip_posebusters: bool = False
+    skip_posebusters: bool = False,
+    alphafold3: bool = False,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Generate PoseBusters and phenix results for each model in the input dataframe.
@@ -294,6 +302,6 @@ def validate(
     print("\nRunning PoseBusters & phenix validation...")
 
     # Run PoseBusters and phenix on all models
-    pb_df = run_validation(df_main, df_ligand)
+    pb_df = run_validation(df_main, df_ligand, alphafold3=alphafold3)
 
     return pb_df

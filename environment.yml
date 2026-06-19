@@ -2,7 +2,7 @@ name: hayward-boltz2
 channels:
   - conda-forge
 dependencies:
-  - python=3.10
+  - python=3.11
   - biopython=1.85
   - numpy=1.26.0
   - openpyxl=3.1.5
